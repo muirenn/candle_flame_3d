@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Debug
+/.vs/blenderSample/v15
+/blenderSample/Debug/blenderSample.tlog
+/blenderSample/Debug
+/blenderSample/targetver.h
+/blenderSample/stdafx.h
+/blenderSample/blenderSample.vcxproj.user
+/blenderSample/blenderSample.vcxproj.filters
+/blenderSample/blenderSample.vcxproj
+/blenderSample/stdafx.cpp
+/blenderSample.sln
+/blenderSample.sln.DotSettings.user

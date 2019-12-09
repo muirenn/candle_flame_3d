@@ -353,18 +353,11 @@ void VolumeInstance::vel_step(float* velocity_x, float* velocity_y, float* veloc
 	add_source(velocity_y, velocity_y_prev);
 	add_source(velocity_z, velocity_z_prev);
 
-	SWAP(velocity_x_prev, velocity_x);
-	diffuse(1, velocity_x, velocity_x_prev);
-	SWAP(velocity_y_prev, velocity_y);
-	diffuse(2, velocity_y, velocity_y_prev);
-	SWAP(velocity_z_prev, velocity_z);
-	diffuse(3, velocity_z, velocity_z_prev);
+	diffuse(1, velocity_x_prev, velocity_x);
+	diffuse(2, velocity_y_prev, velocity_y);
+	diffuse(3, velocity_z_prev, velocity_z);
 
-	project(velocity_x, velocity_y, velocity_z, velocity_x_prev, velocity_y_prev);
-
-	SWAP(velocity_x_prev, velocity_x);
-	SWAP(velocity_y_prev, velocity_y);
-	SWAP(velocity_z_prev, velocity_z);
+	project(velocity_x_prev, velocity_y_prev, velocity_z_prev, velocity_x, velocity_y);
 
 	advect(1, velocity_x, velocity_x_prev, velocity_x_prev, velocity_y_prev, velocity_z_prev);
 	advect(2, velocity_y, velocity_y_prev, velocity_x_prev, velocity_y_prev, velocity_z_prev);
@@ -377,9 +370,7 @@ void VolumeInstance::dens_step(float* density, float* density_prev, float* veloc
                                float* velocity_z)
 {
 	add_source(density, density_prev);
-	SWAP(density_prev, density);
-	diffuse(0, density, density_prev);
-	SWAP(density_prev, density);
+	diffuse(0, density_prev, density);
 	advect(0, density, density_prev, velocity_x, velocity_y, velocity_z);
 }
 

@@ -18,14 +18,6 @@ constexpr auto high_velocity = 1.2;
 constexpr auto iter = 64;
 constexpr auto scale = 5;
 
-constexpr void SWAP(float* x0, float* x)
-{
-	float* tmp = x0;
-	x0 = x;
-	x = tmp;
-}
-
-
 class VolumeInstance
 {
 private:

@@ -6,17 +6,21 @@
 using namespace std;
 
 
-constexpr auto cube_side_size = 30;
+constexpr auto cube_side_size = 50;
 constexpr auto viscosity = 0.0000001f;
 constexpr auto diffusivity = 0;
-constexpr auto time_step = 0.1;
+constexpr auto time_step = 0.01;
 constexpr auto bvox_filename = "holyshit3.bvox";;
-constexpr auto avg_density = 25;
-constexpr auto high_density = 100;
+constexpr auto avg_density = 5;
+constexpr auto high_density = 20;
 constexpr auto avg_velocity = 0.8;
 constexpr auto high_velocity = 1.2;
-constexpr auto iter = 64;
+constexpr auto iter = 20;
 constexpr auto scale = 5;
+
+//constexpr int idx(int i, int j, int k, int N) { return i+j*(N+2)+k*(N+2)*(N+2); }
+#define idx(i,j,k,N)  ((i)+j*((N)+2)+(k)*((N)+2)*((N)+2))
+
 
 class VolumeInstance
 {
@@ -25,25 +29,25 @@ private:
 
 	int n_;
 	unsigned int size_;
-	float visc_, diff_, dt_;
-	float min_, max_;
+	double visc_, diff_, dt_;
+	double min_, max_;
 
-	float* density_prev_;
-	float *velocity_x_, *velocity_y_, *velocity_z_;
-	float *velocity_x_prev_, *velocity_y_prev_, *velocity_z_prev_;
+	double* density_prev_;
+	double *velocity_x_, *velocity_y_, *velocity_z_;
+	double *velocity_x_prev_, *velocity_y_prev_, *velocity_z_prev_;
 
 
-	unsigned int idx(int i, int j, int k) const;
-	void add_source(float* x, float* s);
-	void project(float* u, float* v, float* w, float* p, float* div);
-	void set_bnd(int b, float* x);
-	void diffuse(int b, float* x, float* x0);
-	void advect(int b, float* d, float* d0, float* u, float* v, float* w);
-	void vel_step(float* velocity_x, float* velocity_y, float* velocity_z, float* velocity_x_prev,
-	              float* velocity_y_prev, float* velocity_z_prev);
-	void dens_step(float* density, float* density_prev, float* velocity_x, float* velocity_y, float* velocity_z);
+	// unsigned int idx(int i, int j, int k) const;
+	void add_source(double* x, double* s);
+	void project(double* u, double* v, double* w, double* p, double* div);
+	void set_bnd(int b, double* x);
+	void diffuse(int b, double* x, double* x0);
+	void advect(int b, double* d, double* d0, double* u, double* v, double* w);
+	void vel_step(double* velocity_x, double* velocity_y, double* velocity_z, double* velocity_x_prev,
+	              double* velocity_y_prev, double* velocity_z_prev);
+	void dens_step(double* density, double* density_prev, double* velocity_x, double* velocity_y, double* velocity_z);
 	void add_prev();
-	void find_minmax(float* arr);
+	void find_minmax(double* arr);
 
 public:
 	VolumeInstance();
@@ -51,7 +55,7 @@ public:
 	void init();
 	void step();
 	string filename_;
-	float* density_;
+	double* density_;
 
-	void write_to_file(float* arr);
+	void write_to_file(double* arr);
 };

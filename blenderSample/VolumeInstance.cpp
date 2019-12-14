@@ -16,7 +16,7 @@ void SWAP(double* x0, double* x)
 }
 */
 
-void VolumeInstance::write_to_file(double* arr)
+void VolumeInstance::write_to_file()
 {
 	//double min = arr[idx(1,1,1, n_)], max = arr[idx(1,1,1, n_)];
 
@@ -34,8 +34,8 @@ void VolumeInstance::write_to_file(double* arr)
 			for (int k = 1; k <= n_; k++)
 			{
 				// C++ writes files in native format. On a standard x86-derived PC native is little endian
-				  float currentV = static_cast<float>(arr[idx(i, j, k, n_)] - min_) / (max_ - min_);
-				///				float currentV = static_cast<float>(arr[idx(i, j, k, n_)]);
+				  float currentV = static_cast<float>(density_[idx(i, j, k, n_)] - min_) / (max_ - min_);
+				//				float currentV = static_cast<float>(arr[idx(i, j, k, n_)]);
 
 				// zi = (xi - min(x))/(max(x)-min(x));
 
@@ -329,49 +329,31 @@ void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, 
 	set_bnd(b, d);
 }
 
-void VolumeInstance::vel_step(double* velocity_x, double* velocity_y, double* velocity_z, double* velocity_x_prev,
-                              double* velocity_y_prev, double* velocity_z_prev)
+void VolumeInstance::vel_step()
 {
-	add_source(velocity_x, velocity_x_prev);
-	add_source(velocity_y, velocity_y_prev);
-	add_source(velocity_z, velocity_z_prev);
-	/*
-	diffuse(1, velocity_x_prev, velocity_x);
-	diffuse(2, velocity_y_prev, velocity_y);
-	diffuse(3, velocity_z_prev, velocity_z);
+//	add_source(velocity_x_, velocity_x_prev_);
+//	add_source(velocity_y_, velocity_y_prev_);
+	//add_source(velocity_z_, velocity_z_prev_);
 
-	project(velocity_x_prev, velocity_y_prev, velocity_z_prev, velocity_x, velocity_y);
-	*/
+	diffuse(1, velocity_x_prev_, velocity_x_);
+	diffuse(2, velocity_y_prev_, velocity_y_);
+	diffuse(3, velocity_z_prev_, velocity_z_);
 
-	SWAP(velocity_x_prev, velocity_x);
-	diffuse(1, velocity_x, velocity_x_prev);
-	SWAP(velocity_y_prev, velocity_y);
-	diffuse(2, velocity_y, velocity_y_prev);
-	SWAP(velocity_z_prev, velocity_z);
-	diffuse(3, velocity_z, velocity_z_prev);
+	project(velocity_x_prev_, velocity_y_prev_, velocity_z_prev_, velocity_x_, velocity_y_);
 
-	project(velocity_x, velocity_y, velocity_z, velocity_x_prev, velocity_y_prev);
-
-	SWAP(velocity_x_prev, velocity_x);
-	SWAP(velocity_y_prev, velocity_y);
-	SWAP(velocity_z_prev, velocity_z);
 	
-	advect(1, velocity_x, velocity_x_prev, velocity_x_prev, velocity_y_prev, velocity_z_prev);
-	advect(2, velocity_y, velocity_y_prev, velocity_x_prev, velocity_y_prev, velocity_z_prev);
-	advect(3, velocity_z, velocity_z_prev, velocity_x_prev, velocity_y_prev, velocity_z_prev);
+	advect(1, velocity_x_, velocity_x_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
+	advect(2, velocity_y_, velocity_y_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
+	advect(3, velocity_z_, velocity_z_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
 
-	project(velocity_x, velocity_y, velocity_z, velocity_x_prev, velocity_y_prev);
+	project(velocity_x_, velocity_y_, velocity_z_, velocity_x_prev_, velocity_y_prev_);
 }
 
-void VolumeInstance::dens_step(double* density, double* density_prev, double* velocity_x, double* velocity_y,
-                               double* velocity_z)
+void VolumeInstance::dens_step()
 {
-	add_source(density, density_prev);
-	// diffuse(0, density_prev, density);
-	SWAP(density_prev, density);
-	diffuse(0, density, density_prev);
-	SWAP(density_prev, density);
-	advect(0, density, density_prev, velocity_x, velocity_y, velocity_z);
+	//add_source(density_, density_prev_);
+	diffuse(0, density_prev_, density_);
+	advect(0, density_, density_prev_, velocity_x_, velocity_y_, velocity_z_);
 }
 
 VolumeInstance::VolumeInstance(): n_(cube_side_size), size_(0), visc_(viscosity), diff_(diffusivity), dt_(time_step),
@@ -475,9 +457,9 @@ void VolumeInstance::init()
 void VolumeInstance::step()
 {
 	// get_from_UI ( dens_prev, u_prev, v_prev );
-	 vel_step(velocity_x_, velocity_y_, velocity_z_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
-	 dens_step(density_, density_prev_, velocity_x_, velocity_y_, velocity_z_);
-	write_to_file(density_);
+	 vel_step();
+	 dens_step();
+	write_to_file();
 	add_prev();
 	// SWAP(velocity_x_prev_, velocity_x_);
 	// SWAP(velocity_y_prev_, velocity_y_);

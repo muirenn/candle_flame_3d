@@ -45,9 +45,8 @@ private:
 	void set_bnd(int b, double* x);
 	void diffuse(int b, double* x, double* x0);
 	void advect(int b, double* d, double* d0, double* u, double* v, double* w);
-	void vel_step(double* velocity_x, double* velocity_y, double* velocity_z, double* velocity_x_prev,
-	              double* velocity_y_prev, double* velocity_z_prev);
-	void dens_step(double* density, double* density_prev, double* velocity_x, double* velocity_y, double* velocity_z);
+	void vel_step();
+	void dens_step();
 	void add_prev();
 	void find_minmax(double* arr);
 
@@ -59,5 +58,5 @@ public:
 	string filename_;
 	double* density_;
 
-	void write_to_file(double* arr);
+	void write_to_file();
 };

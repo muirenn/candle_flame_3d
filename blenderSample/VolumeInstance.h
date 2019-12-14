@@ -9,7 +9,7 @@ using namespace std;
 constexpr auto cube_side_size = 50;
 constexpr auto viscosity = 0.0000001f;
 constexpr auto diffusivity = 0;
-constexpr auto time_step = 0.01;
+constexpr auto time_step = 0.05;
 constexpr auto bvox_filename = "holyshit3.bvox";;
 constexpr auto avg_density = 5;
 constexpr auto high_density = 20;
@@ -20,6 +20,8 @@ constexpr auto scale = 5;
 
 //constexpr int idx(int i, int j, int k, int N) { return i+j*(N+2)+k*(N+2)*(N+2); }
 #define idx(i,j,k,N)  ((i)+j*((N)+2)+(k)*((N)+2)*((N)+2))
+#define SWAP(x0, x) {double *tmp=x0;x0=x;x=tmp;}
+
 
 
 class VolumeInstance

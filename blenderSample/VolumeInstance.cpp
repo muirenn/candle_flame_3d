@@ -12,7 +12,7 @@ void VolumeInstance::add_source(double* x, double* s) const
 void VolumeInstance::project(double* u, double* v, double* w, double* p, double* div) const
 {
 	int i, j, k, l;
-	const double h = 1.0f / n_;
+	// const double h = 1.0f / n_;
 
 	for (i = 1; i <= n_; i++)
 	{
@@ -21,7 +21,7 @@ void VolumeInstance::project(double* u, double* v, double* w, double* p, double*
 			for (k = 1; k <= n_; k++)
 			{
 				div[IDX(i, j, k, n_)] =
-					-0.5f * h * (
+					-0.5f / static_cast<double>(n_) * (
 						u[IDX(i + 1, j, k, n_)] -
 						u[IDX(i - 1, j, k, n_)] +
 						v[IDX(i, j + 1, k, n_)] -
@@ -36,7 +36,8 @@ void VolumeInstance::project(double* u, double* v, double* w, double* p, double*
 	set_bnd(density, div);
 	set_bnd(density, p);
 
-	for (l = 0; l < DEFAULT_iter; l++)
+	lin_solve(density, p, div, 1, 6);
+	/*for (l = 0; l < DEFAULT_iter; l++)
 	{
 		for (i = 1; i <= n_; i++)
 		{
@@ -57,7 +58,7 @@ void VolumeInstance::project(double* u, double* v, double* w, double* p, double*
 			}
 		}
 		set_bnd(density, p);
-	}
+	}*/
 	for (i = 1; i <= n_; i++)
 	{
 		for (j = 1; j <= n_; j++)
@@ -67,15 +68,15 @@ void VolumeInstance::project(double* u, double* v, double* w, double* p, double*
 				u[IDX(i, j, k, n_)] -= 0.5f * (
 					p[IDX(i + 1, j, k, n_)] -
 					p[IDX(i - 1, j, k, n_)]
-				) / h;
+				) * n_;
 				v[IDX(i, j, k, n_)] -= 0.5f * (
 					p[IDX(i, j + 1, k, n_)] -
 					p[IDX(i, j - 1, k, n_)]
-				) / h;
+				) * n_;
 				w[IDX(i, j, k, n_)] -= 0.5f * (
 					p[IDX(i, j, k + 1, n_)] -
 					p[IDX(i, j, k - 1, n_)]
-				) / h;
+				) * n_;
 			}
 		}
 	}
@@ -84,64 +85,66 @@ void VolumeInstance::project(double* u, double* v, double* w, double* p, double*
 	set_bnd(velocity_z, w);
 }
 
-void VolumeInstance::set_bnd(int b, double* x) const
+void VolumeInstance::set_bnd(const int type, double* values) const
 {
-	for (int j = 1; j <= n_; j++)
-	{
-		for (int i = 1; i <= n_; i++)
-		{
-			x[IDX(i, j, 0, n_)] = b == velocity_z ? -x[IDX(i, j, 1, n_)] : x[IDX(i, j, 1, n_)];
-			x[IDX(i, j, n_ + 1, n_)] = b == velocity_z ? -x[IDX(i, j, n_, n_)] : x[IDX(i, j, n_, n_)];
-		}
-	}
-	for (int k = 1; k <= n_; k++)
-	{
-		for (int i = 1; i <= n_; i++)
-		{
-			x[IDX(i, 0, k, n_)] = b == velocity_y ? -x[IDX(i, 1, k, n_)] : x[IDX(i, 1, k, n_)];
-			x[IDX(i, n_ + 1, k, n_)] = b == velocity_y ? -x[IDX(i, n_, k, n_)] : x[IDX(i, n_, k, n_)];
-		}
-	}
-	for (int k = 1; k <= n_; k++)
+	for (int i = 1; i <= n_; i++)
 	{
 		for (int j = 1; j <= n_; j++)
 		{
-			x[IDX(0, j, k, n_)] = b == velocity_x ? -x[IDX(1, j, k, n_)] : x[IDX(1, j, k, n_)];
-			x[IDX(n_ + 1, j, k, n_)] = b == velocity_x ? -x[IDX(n_, j, k, n_)] : x[IDX(n_, j, k, n_)];
+			values[IDX(i, j, 0, n_)] = (type == velocity_z ? -values[IDX(i, j, 1, n_)] : values[IDX(i, j, 1, n_)]);
+			values[IDX(i, j, n_ + 1, n_)] = (type == velocity_z ? -values[IDX(i, j, n_, n_)] : values[IDX(i, j, n_, n_)]);
+		}
+	}
+	for (int i = 1; i <= n_; i++)
+	{
+		for (int k = 1; k <= n_; k++)
+		{
+			values[IDX(i, 0, k, n_)] = (type == velocity_y ? -values[IDX(i, 1, k, n_)] : values[IDX(i, 1, k, n_)]);
+			values[IDX(i, n_ + 1, k, n_)] = (type == velocity_y ? -values[IDX(i, n_, k, n_)] : values[IDX(i, n_, k, n_)]);
+		}
+	}
+	for (int j = 1; j <= n_; j++)
+	{
+		for (int k = 1; k <= n_; k++)
+		{
+			values[IDX(0, j, k, n_)] = (type == velocity_x ? -values[IDX(1, j, k, n_)] : values[IDX(1, j, k, n_)]);
+			values[IDX(n_ + 1, j, k, n_)] = (type == velocity_x ? -values[IDX(n_, j, k, n_)] : values[IDX(n_, j, k, n_)]);
 		}
 	}
 
-	x[IDX(0, 0, 0, n_)] = 0.33f * (x[IDX(1, 0, 0, n_)]
-		+ x[IDX(0, 1, 0, n_)]
-		+ x[IDX(0, 0, 1, n_)]);
-	x[IDX(0, n_ + 1, 0, n_)] = 0.33f * (x[IDX(1, n_ + 1, 0, n_)]
-		+ x[IDX(0, n_, 0, n_)]
-		+ x[IDX(0, n_ + 1, 1, n_)]);
-	x[IDX(0, 0, n_ + 1, n_)] = 0.33f * (x[IDX(1, 0, n_ + 1, n_)]
-		+ x[IDX(0, 1, n_ + 1, n_)]
-		+ x[IDX(0, 0, n_ + 2, n_)]);
-	x[IDX(0, n_ + 1, n_ + 1, n_)] = 0.33f * (x[IDX(1, n_ + 1, n_ + 1, n_)]
-		+ x[IDX(0, n_ + 2, n_ + 1, n_)]
-		+ x[IDX(0, n_ + 1, n_, n_)]);
-	x[IDX(n_ + 1, 0, 0, n_)] = 0.33f * (x[IDX(n_, 0, 0, n_)]
-		+ x[IDX(n_ + 1, 1, 0, n_)]
-		+ x[IDX(n_ + 1, 0, 1, n_)]);
-	x[IDX(n_ + 1, n_ + 1, 0, n_)] = 0.33f * (x[IDX(n_, n_ + 1, 0, n_)]
-		+ x[IDX(n_ + 1, n_, 0, n_)]
-		+ x[IDX(n_ + 1, n_ + 1, 1, n_)]);
-	x[IDX(n_ + 1, 0, n_ + 1, n_)] = 0.33f * (x[IDX(n_, 0, n_ + 1, n_)]
-		+ x[IDX(n_ + 1, 1, n_ + 1, n_)]
-		+ x[IDX(n_ + 1, 0, n_, n_)]);
-	x[IDX(n_ + 1, n_ + 1, n_ + 1, n_)] = 0.33f * (x[IDX(n_, n_ + 1, n_ + 1, n_)]
-		+ x[IDX(n_ + 1, n_, n_ + 1, n_)]
-		+ x[IDX(n_ + 1, n_ + 1, n_, n_)]);
+	values[IDX(0, 0, 0, n_)] = 0.33f * (values[IDX(1, 0, 0, n_)]
+		+ values[IDX(0, 1, 0, n_)]
+		+ values[IDX(0, 0, 1, n_)]);
+	values[IDX(0, n_ + 1, 0, n_)] = 0.33f * (values[IDX(1, n_ + 1, 0, n_)]
+		+ values[IDX(0, n_, 0, n_)]
+		+ values[IDX(0, n_ + 1, 1, n_)]);
+	values[IDX(0, 0, n_ + 1, n_)] = 0.33f * (values[IDX(1, 0, n_ + 1, n_)]
+		+ values[IDX(0, 1, n_ + 1, n_)]
+		+ values[IDX(0, 0, n_ + 2, n_)]);
+	values[IDX(0, n_ + 1, n_ + 1, n_)] = 0.33f * (values[IDX(1, n_ + 1, n_ + 1, n_)]
+		+ values[IDX(0, n_ + 2, n_ + 1, n_)]
+		+ values[IDX(0, n_ + 1, n_, n_)]);
+	values[IDX(n_ + 1, 0, 0, n_)] = 0.33f * (values[IDX(n_, 0, 0, n_)]
+		+ values[IDX(n_ + 1, 1, 0, n_)]
+		+ values[IDX(n_ + 1, 0, 1, n_)]);
+	values[IDX(n_ + 1, n_ + 1, 0, n_)] = 0.33f * (values[IDX(n_, n_ + 1, 0, n_)]
+		+ values[IDX(n_ + 1, n_, 0, n_)]
+		+ values[IDX(n_ + 1, n_ + 1, 1, n_)]);
+	values[IDX(n_ + 1, 0, n_ + 1, n_)] = 0.33f * (values[IDX(n_, 0, n_ + 1, n_)]
+		+ values[IDX(n_ + 1, 1, n_ + 1, n_)]
+		+ values[IDX(n_ + 1, 0, n_, n_)]);
+	values[IDX(n_ + 1, n_ + 1, n_ + 1, n_)] = 0.33f * (values[IDX(n_, n_ + 1, n_ + 1, n_)]
+		+ values[IDX(n_ + 1, n_, n_ + 1, n_)]
+		+ values[IDX(n_ + 1, n_ + 1, n_, n_)]);
 }
 
-void VolumeInstance::diffuse(int b, double* x, double* x0) const
+void VolumeInstance::diffuse(const int type, double* values, double* values_0) const
 {
-	int i, j, k, l;
 	double a = dt_ * diff_ * n_ * n_ * n_;
-	for (l = 0; l < DEFAULT_iter; l++)
+
+	lin_solve(type, values, values_0, a, 1 + 6 * a);
+	
+	/*for (l = 0; l < DEFAULT_iter; l++)
 	{
 		for (i = 1; i <= n_; i++)
 		{
@@ -149,49 +152,49 @@ void VolumeInstance::diffuse(int b, double* x, double* x0) const
 			{
 				for (k = 1; k <= n_; k++)
 				{
-					x[IDX(i, j, k, n_)] = x0[IDX(i, j, k, n_)] + a *
+					values[IDX(i, j, k, n_)] = values_0[IDX(i, j, k, n_)] + a *
 					(
-						x[IDX(i - 1, j, k, n_)] +
-						x[IDX(i + 1, j, k, n_)] +
-						x[IDX(i, j - 1, k, n_)] +
-						x[IDX(i, j + 1, k, n_)] +
-						x[IDX(i, j, k - 1, n_)] +
-						x[IDX(i, j, k + 1, n_)]
+						values[IDX(i - 1, j, k, n_)] +
+						values[IDX(i + 1, j, k, n_)] +
+						values[IDX(i, j - 1, k, n_)] +
+						values[IDX(i, j + 1, k, n_)] +
+						values[IDX(i, j, k - 1, n_)] +
+						values[IDX(i, j, k + 1, n_)]
 					) / (1 + 6 * a);
 				}
 			}
 		}
-		set_bnd(b, x);
-	}
+		set_bnd(type, values);
+	}*/
 }
 
 void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, double* w)
 {
-	int i, j, k, i0, j0, k0, i1, j1, k1;
-	double x, y, z, s0, t0, r0, s1, t1, r1, dt0;
+	int i, j, k;
+	double x, y, z, s0, t0, r0, s1, t1, r1, dt0, i0, j0, k0, i1, j1, k1;
 
 	dt0 = dt_ * n_;
 
-	for (i = 1; i <= n_; i++)
+	for (k = 1; k <= n_; k++)
 	{
 		for (j = 1; j <= n_; j++)
 		{
-			for (k = 1; k <= n_; k++)
+			for (i = 1; i <= n_; i++)
 			{
-				x = i - dt0 * u[IDX(i, j, k, n_)];
-				y = j - dt0 * v[IDX(i, j, k, n_)];
-				z = k - dt0 * w[IDX(i, j, k, n_)];
+				x = static_cast<double>(i) - dt0 * u[IDX(i, j, k, n_)];
+				y = static_cast<double>(j) - dt0 * v[IDX(i, j, k, n_)];
+				z = static_cast<double>(k) - dt0 * w[IDX(i, j, k, n_)];
 				if (x < 0.5) x = 0.5;
 				if (x > n_ + 0.5) x = static_cast<double>(n_) + 0.5;
-				i0 = static_cast<int>(x);
+				i0 = floorf(x);
 				i1 = i0 + 1;
 				if (y < 0.5) y = 0.5;
 				if (y > n_ + 0.5) y = static_cast<double>(n_) + 0.5;
-				j0 = static_cast<int>(y);
+				j0 = floorf(y);
 				j1 = j0 + 1;
 				if (z < 0.5) z = 0.5;
 				if (z > n_ + 0.5) z = static_cast<double>(n_) + 0.5;
-				k0 = static_cast<int>(z);
+				k0 = floorf(z);
 				k1 = k0 + 1;
 				s1 = x - i0;
 				s0 = 1 - s1;
@@ -200,15 +203,22 @@ void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, 
 				r1 = z - k0;
 				r0 = 1 - r1;
 
+				int i0i = i0;
+				int i1i = i1;
+				int j0i = j0;
+				int j1i = j1;
+				int k0i = k0;
+				int k1i = k1;
+
 				const double dens =
-					s0 * t0 * r0 * d0[IDX(i0, j0, k0, n_)] +
-					s0 * t0 * r1 * d0[IDX(i0, j0, k1, n_)] +
-					s0 * t1 * r0 * d0[IDX(i0, j1, k0, n_)] +
-					s0 * t1 * r1 * d0[IDX(i0, j1, k1, n_)] +
-					s1 * t0 * r0 * d0[IDX(i1, j0, k0, n_)] +
-					s1 * t0 * r1 * d0[IDX(i1, j0, k1, n_)] +
-					s1 * t1 * r0 * d0[IDX(i1, j1, k0, n_)] +
-					s1 * t1 * r1 * d0[IDX(i1, j1, k1, n_)];
+					s0 * t0 * r0 * d0[IDX(i0i, j0i, k0i, n_)] +
+					s0 * t0 * r1 * d0[IDX(i0i, j0i, k1i, n_)] +
+					s0 * t1 * r0 * d0[IDX(i0i, j1i, k0i, n_)] +
+					s0 * t1 * r1 * d0[IDX(i0i, j1i, k1i, n_)] +
+					s1 * t0 * r0 * d0[IDX(i1i, j0i, k0i, n_)] +
+					s1 * t0 * r1 * d0[IDX(i1i, j0i, k1i, n_)] +
+					s1 * t1 * r0 * d0[IDX(i1i, j1i, k0i, n_)] +
+					s1 * t1 * r1 * d0[IDX(i1i, j1i, k1i, n_)];
 
 				d[IDX(i, j, k, n_)] = dens;
 
@@ -231,22 +241,49 @@ void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, 
 	set_bnd(b, d);
 }
 
+void VolumeInstance::lin_solve(int type, double* values, double* values_0, double a, double c) const
+{
+	int i, j, k, l;
+	for (l = 0; l < DEFAULT_iter; l++)
+	{
+		for (i = 1; i <= n_; i++)
+		{
+			for (j = 1; j <= n_; j++)
+			{
+				for (k = 1; k <= n_; k++)
+				{
+					values[IDX(i, j, k, n_)] = (values_0[IDX(i, j, k, n_)] + 
+						a * (
+							values[IDX(i - 1, j, k, n_)] +
+							values[IDX(i + 1, j, k, n_)] +
+							values[IDX(i, j - 1, k, n_)] +
+							values[IDX(i, j + 1, k, n_)] +
+							values[IDX(i, j, k - 1, n_)] +
+							values[IDX(i, j, k + 1, n_)]
+							)) / c;
+				}
+			}
+		}
+		set_bnd(type, values);
+	}
+}
+
 void VolumeInstance::vel_step()
 {
 	//	add_source(velocity_x_, velocity_x_prev_);
 	//	add_source(velocity_y_, velocity_y_prev_);
 	//add_source(velocity_z_, velocity_z_prev_);
 
-	diffuse(1, velocity_x_prev_, velocity_x_);
-	diffuse(2, velocity_y_prev_, velocity_y_);
-	diffuse(3, velocity_z_prev_, velocity_z_);
+	diffuse(velocity_x, velocity_x_prev_, velocity_x_);
+	diffuse(velocity_y, velocity_y_prev_, velocity_y_);
+	diffuse(velocity_z, velocity_z_prev_, velocity_z_);
 
 	project(velocity_x_prev_, velocity_y_prev_, velocity_z_prev_, velocity_x_, velocity_y_);
 
 
-	advect(1, velocity_x_, velocity_x_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
-	advect(2, velocity_y_, velocity_y_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
-	advect(3, velocity_z_, velocity_z_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
+	advect(velocity_x, velocity_x_, velocity_x_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
+	advect(velocity_y, velocity_y_, velocity_y_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
+	advect(velocity_z, velocity_z_, velocity_z_prev_, velocity_x_prev_, velocity_y_prev_, velocity_z_prev_);
 
 	project(velocity_x_, velocity_y_, velocity_z_, velocity_x_prev_, velocity_y_prev_);
 }

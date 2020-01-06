@@ -2,6 +2,8 @@
 
 #include "VolumeInstance.h"
 
+#define DEFAULT_time 30
+
 class FullAnimation
 {
 private:

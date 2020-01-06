@@ -1,8 +1,9 @@
 #pragma once
 
 #include "stdafx.h"
-#include <iostream>
+#include "startup_values.h"
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 
@@ -39,7 +40,7 @@ private:
 	void add_source(double* x, double* s) const;
 	void project(double* u, double* v, double* w, double* p, double* div) const;
 	void set_bnd(int b, double* x) const;
-	void diffuse(int b, double* x, double* x0);
+	void diffuse(int b, double* x, double* x0) const;
 	void advect(int b, double* d, double* d0, double* u, double* v, double* w);
 	void vel_step();
 	void dens_step();
@@ -47,11 +48,12 @@ private:
 public:
 	VolumeInstance();
 	~VolumeInstance();
-	void allocate_memory();
+	void allocate_memory(int n);
 	void step();
 	void draw_sphere() const;
+	void draw_candle_v1() const;
 	double get_density(int i) const;
 	double get_min() const;
 	double get_max() const;
-	void set_prev_values(const VolumeInstance& prev_frame);
+	void set_prev_values_nochange(const VolumeInstance& prev_frame);
 };

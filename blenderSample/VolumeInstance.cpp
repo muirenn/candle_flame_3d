@@ -137,7 +137,7 @@ void VolumeInstance::set_bnd(int b, double* x) const
 		+ x[IDX(n_ + 1, n_ + 1, n_, n_)]);
 }
 
-void VolumeInstance::diffuse(int b, double* x, double* x0)
+void VolumeInstance::diffuse(int b, double* x, double* x0) const
 {
 	int i, j, k, l;
 	double a = dt_ * diff_ * n_ * n_ * n_;
@@ -182,15 +182,15 @@ void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, 
 				y = j - dt0 * v[IDX(i, j, k, n_)];
 				z = k - dt0 * w[IDX(i, j, k, n_)];
 				if (x < 0.5) x = 0.5;
-				if (x > n_ + 0.5) x = n_ + 0.5f;
+				if (x > n_ + 0.5) x = static_cast<double>(n_) + 0.5;
 				i0 = static_cast<int>(x);
 				i1 = i0 + 1;
 				if (y < 0.5) y = 0.5;
-				if (y > n_ + 0.5) y = n_ + 0.5f;
+				if (y > n_ + 0.5) y = static_cast<double>(n_) + 0.5;
 				j0 = static_cast<int>(y);
 				j1 = j0 + 1;
 				if (z < 0.5) z = 0.5;
-				if (z > n_ + 0.5) z = n_ + 0.5f;
+				if (z > n_ + 0.5) z = static_cast<double>(n_) + 0.5;
 				k0 = static_cast<int>(z);
 				k1 = k0 + 1;
 				s1 = x - i0;
@@ -200,7 +200,7 @@ void VolumeInstance::advect(int b, double* d, double* d0, double* u, double* v, 
 				r1 = z - k0;
 				r0 = 1 - r1;
 
-				const float dens =
+				const double dens =
 					s0 * t0 * r0 * d0[IDX(i0, j0, k0, n_)] +
 					s0 * t0 * r1 * d0[IDX(i0, j0, k1, n_)] +
 					s0 * t1 * r0 * d0[IDX(i0, j1, k0, n_)] +
@@ -271,30 +271,31 @@ VolumeInstance::VolumeInstance(): n_(DEFAULT_cube_side_size), size_(0), visc_(DE
 {
 }
 
-
 VolumeInstance::~VolumeInstance()
 {
 	delete[] density_;
 	density_ = nullptr;
-	delete[] density_prev_;
-	density_prev_ = nullptr;
+		delete[] density_prev_;
+		density_prev_ = nullptr;
+		delete[] velocity_x_prev_;
+		velocity_x_prev_ = nullptr;
+		delete[] velocity_y_prev_;
+		velocity_y_prev_ = nullptr;
+		delete[] velocity_z_prev_;
+		velocity_z_prev_ = nullptr;
+
+	
 	delete[] velocity_x_;
 	velocity_x_ = nullptr;
 	delete[] velocity_y_;
 	velocity_y_ = nullptr;
 	delete[] velocity_z_;
 	velocity_z_ = nullptr;
-	delete[] velocity_x_prev_;
-	velocity_x_prev_ = nullptr;
-	delete[] velocity_y_prev_;
-	velocity_y_prev_ = nullptr;
-	delete[] velocity_z_prev_;
-	velocity_z_prev_ = nullptr;
-	cout << endl << "Destructor called" << endl;
 }
 
-void VolumeInstance::allocate_memory()
+void VolumeInstance::allocate_memory(int n)
 {
+	n_ = n;
 	size_ = (n_ + 2) * (n_ + 2) * (n_ + 2);
 
 	density_ = new double[size_];
@@ -316,7 +317,7 @@ void VolumeInstance::step()
 void VolumeInstance::draw_sphere() const
 {
 	int i, j, k;
-	const int half_n = static_cast<int>((n_ + 2) / 2);
+	const int half_n = static_cast<int>(n_ / 2);
 
 	for (i = 0; i <= n_ + 1; i++)
 	{
@@ -324,16 +325,65 @@ void VolumeInstance::draw_sphere() const
 		{
 			for (k = 0; k <= n_ + 1; k++)
 			{
-				const double density_value = (i <= half_n ? i : n_ + 2 - i) * (j <= half_n ? j : n_ + 2 - j) * (
-					k <= half_n ? k : n_ + 2 - k); // center coloring trick
-				//density_[IDX(i, j, k, n_)] = static_cast<double>(density_value);
+				const double density_value = static_cast<double>(i <= half_n ? i : n_ - i) * static_cast<double>(j <= half_n ? j : n_ - j) * static_cast<double>(
+					k <= half_n ? k : n_ - k); 
+				density_[IDX(i, j, k, n_)] = static_cast<double>(density_value);
 				density_prev_[IDX(i, j, k, n_)] = static_cast<double>(density_value);
-				//velocity_x_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
-				//velocity_y_[IDX(i, j, k, n_)] = DEFAULT_high_velocity;
-				//velocity_z_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
+				velocity_x_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
+				velocity_y_[IDX(i, j, k, n_)] = DEFAULT_high_velocity;
+				velocity_z_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
 				velocity_x_prev_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
 				velocity_y_prev_[IDX(i, j, k, n_)] = DEFAULT_high_velocity;
 				velocity_z_prev_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
+			}
+		}
+	}
+}
+
+void VolumeInstance::draw_candle_v1() const
+{
+	int i, j, k;
+	const int half_n = static_cast<int>(n_ / 2);
+	
+	for (i = 0; i <= n_ + 1; i++)
+	{
+		for (j = 0; j <= n_ + 1; j++)
+		{
+			for (k = 0; k <= n_ + 1; k++)
+			{
+			//	density_[IDX(i, j, k, n_)] = 0;
+				// density_prev_[IDX(i, j, k, n_)] = 0;
+				velocity_x_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
+				velocity_y_[IDX(i, j, k, n_)] = 0;
+				velocity_z_[IDX(i, j, k, n_)] = 0;
+				velocity_x_prev_[IDX(i, j, k, n_)] = DEFAULT_avg_velocity;
+				velocity_y_prev_[IDX(i, j, k, n_)] = 0;
+				velocity_z_prev_[IDX(i, j, k, n_)] = 0;
+
+
+				if(i == 0 || j == 0 || k == 0 || i == n_ + 1 || j == n_ +1 || k == n_ + 1)
+				{
+					density_[IDX(i, j, k, n_)] = 0;
+				}
+				else
+				{
+					const int x_displaced = k - half_n - 1;
+					const int y_displaced = j - half_n - 1;
+					int rad_coord = static_cast<int>(sqrt(x_displaced * x_displaced + y_displaced * y_displaced)) - 1;
+					if (rad_coord >= half_n)
+					{
+						density_[IDX(i, j, k, n_)] = 0;
+					}
+					else
+					{
+						const int h_coord = n_ - i;
+						density_[IDX(i, j, k, n_)] = static_cast<double>(candle_80x80[h_coord * half_n + rad_coord]);
+					}
+
+					//cout << density_[IDX(i, j, k, n_)] << endl;
+				}
+				density_prev_[IDX(i, j, k, n_)] = density_[IDX(i, j, k, n_)];
+
 			}
 		}
 	}
@@ -354,12 +404,29 @@ double VolumeInstance::get_max() const
 	return max_;
 }
 
-void VolumeInstance::set_prev_values(const VolumeInstance& prev_frame)
+void VolumeInstance::set_prev_values_nochange(const VolumeInstance& prev_frame)
 {
-	density_prev_ = prev_frame.density_;
-	velocity_x_prev_ = prev_frame.velocity_x_;
-	velocity_y_prev_ = prev_frame.velocity_y_;
-	velocity_z_prev_ = prev_frame.velocity_z_;
+	int i, j, k;
+	for (i = 0; i <= n_ + 1; i++)
+	{
+		for (j = 0; j <= n_ + 1; j++)
+		{
+			for (k = 0; k <= n_ + 1; k++)
+			{
+				int idx = IDX(i, j, k, n_);
+				density_prev_[idx] = prev_frame.density_[idx];
+				velocity_x_prev_[idx] = prev_frame.velocity_x_[idx];
+				velocity_y_prev_[idx] = prev_frame.velocity_y_[idx];
+				velocity_z_prev_[idx] = prev_frame.velocity_z_[idx];
+				density_[idx] = prev_frame.density_[idx];
+				velocity_x_[idx] = prev_frame.velocity_x_[idx];
+				velocity_y_[idx] = prev_frame.velocity_y_[idx];
+				velocity_z_[idx] = prev_frame.velocity_z_[idx];
+			}
+		}
+	}
+	
+
 
 	n_ = prev_frame.n_;
 	size_ = prev_frame.size_;

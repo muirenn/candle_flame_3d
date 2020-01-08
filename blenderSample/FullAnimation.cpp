@@ -8,8 +8,8 @@ void FullAnimation::init()
 
 	frames = new VolumeInstance[time_];
 	frames[0].allocate_memory(n_);
-	// frames[0].draw_sphere();
-	 frames[0].draw_candle_v1();
+	 frames[0].draw_sphere();
+	// frames[0].draw_candle_v1();
 
 	minTotal_ = frames[0].get_min();
 	maxTotal_ = frames[0].get_max();

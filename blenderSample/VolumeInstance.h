@@ -13,11 +13,11 @@ using namespace std;
 #define DEFAULT_time_step 0.05
 #define DEFAULT_avg_density 5
 #define DEFAULT_high_density 20
-#define DEFAULT_avg_velocity 0.8
+#define DEFAULT_avg_velocity 0.5
 #define DEFAULT_high_velocity 1.2
 #define DEFAULT_iter 10
 
-constexpr const char* bvox_filename_DEFAULT = "holyshit3.bvox";
+constexpr const char* bvox_filename_DEFAULT = "holyshit.bvox";
 
 #define IDX(i,j,k,N) ((i)+j*((N)+2)+(k)*((N)+2)*((N)+2))
 #define SWAP(x0, x) {double *tmp=x0;x0=x;x=tmp;}
@@ -41,8 +41,8 @@ private:
 	void project(double* u, double* v, double* w, double* p, double* div) const;
 	void set_bnd(int type, double* values) const;
 	void diffuse(int type, double* values, double* values_0) const;
-	void advect(int b, double* d, double* d0, double* u, double* v, double* w);
-	void lin_solve(int b, double *x, double *x0, double a, double c) const;
+	void advect(int type, double* d, double* d0, double* u, double* v, double* w);
+	void lin_solve(int type, double *x, double *x0, double a, double c) const;
 	void vel_step();
 	void dens_step();
 

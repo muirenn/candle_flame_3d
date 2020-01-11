@@ -6,55 +6,48 @@
 #include <iostream>
 using namespace std;
 
+// The reason it doesn’t work is that the it can become unstable
+// when the diffusion rate is too high, time step too large or
+// grid spacing too small. The problem is that this method breaks
+// down when the density propagates further than just between neighbors.
+
 
 #define DEFAULT_cube_side_size 50
-#define DEFAULT_viscosity 0.0000001f
-#define DEFAULT_diffusivity 0
-#define DEFAULT_time_step 0.05
+#define DEFAULT_viscosity 0.0000001
+#define DEFAULT_diffusivity 0 // L^2*T^(-1); L = initial size of gas blob or field
+#define DEFAULT_time_step 0.05 // T
+#define DEFAULT_iter 4
+
 #define DEFAULT_avg_density 5
 #define DEFAULT_high_density 20
 #define DEFAULT_avg_velocity 0.5
 #define DEFAULT_high_velocity 1.2
-#define DEFAULT_iter 10
 
 constexpr const char* bvox_filename_DEFAULT = "holyshit.bvox";
 
 #define IDX(i,j,k,N) ((i)+j*((N)+2)+(k)*((N)+2)*((N)+2))
 #define SWAP(x0, x) {double *tmp=x0;x0=x;x=tmp;}
 
+enum property { density = 0, velocity_x = 1, velocity_y = 2, velocity_z = 3 };
+
 class VolumeInstance
 {
 private:
-	enum property { density = 0, velocity_x = 1, velocity_y = 2, velocity_z = 3 };
-
-	int n_;
-	unsigned int size_;
-	double visc_, diff_, dt_;
-	double min_, max_;
-
-	double* density_;
-	double* density_prev_;
-	double *velocity_x_, *velocity_y_, *velocity_z_;
-	double *velocity_x_prev_, *velocity_y_prev_, *velocity_z_prev_;
-
-	void add_source(double* x, double* s) const;
-	void project(double* u, double* v, double* w, double* p, double* div) const;
-	void set_bnd(int type, double* values) const;
-	void diffuse(int type, double* values, double* values_0) const;
-	void advect(int type, double* d, double* d0, double* u, double* v, double* w);
-	void lin_solve(int type, double *x, double *x0, double a, double c) const;
-	void vel_step();
-	void dens_step();
 
 public:
+
 	VolumeInstance();
 	~VolumeInstance();
-	void allocate_memory(int n);
+	double* density_;
+	double *velocity_x_, *velocity_y_, *velocity_z_;
+	double visc_, diff_, dt_;
+	double min_, max_;
+	
+	void allocate_memory(unsigned long long int size);
 	void step();
-	void draw_sphere() const;
-	void draw_candle_v1() const;
-	double get_density(int i) const;
+	void draw_sphere(unsigned long int n);
+	void draw_candle_v1(unsigned long int n) const;
 	double get_min() const;
 	double get_max() const;
-	void set_prev_values_nochange(const VolumeInstance& prev_frame);
+	void fill_with_zeros(unsigned long int n);
 };

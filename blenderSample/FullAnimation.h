@@ -11,7 +11,7 @@ private:
 	VolumeInstance* frame;
 	VolumeInstance* frame_prev;
 	
-	double* d;
+	double* dens_volumes;
 	unsigned int time_;
 	unsigned long int n_;
 	unsigned long long int frame_size_, iter; //max: ; cubic root [n_] = 2 642 246

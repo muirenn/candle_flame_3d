@@ -46,12 +46,12 @@ void VolumeInstance::draw_sphere(unsigned long int n)
 		{
 			for (k = 0; k <= n + 1; k++)
 			{
-				const double density_value = static_cast<double>(i <= half_n ? i : n - i) * static_cast<double>(j <= half_n ? j : n - j) * static_cast<double>(
-					k <= half_n ? k : n - k); 
-				density_[IDX(i, j, k, n)] = static_cast<double>(density_value);
-				velocity_x_[IDX(i, j, k, n)] = DEFAULT_high_velocity;
+				const double density_value = ((i <= half_n) ? i : (n + 2 - i)) * ((j <= half_n) ? j : (n + 2 - j)) *(
+					(k <= half_n) ? k : (n + 2 - k)); 
+				density_[IDX(i, j, k, n)] = density_value;
+				velocity_x_[IDX(i, j, k, n)] = 0;
 				velocity_y_[IDX(i, j, k, n)] = 0;
-				velocity_z_[IDX(i, j, k, n)] = 0;
+				velocity_z_[IDX(i, j, k, n)] = DEFAULT_high_velocity;
 
 				if(density_value > max_)
 				{
@@ -94,7 +94,7 @@ void VolumeInstance::draw_candle_v1(unsigned long int n) const
 				{
 					const int x_displaced = k - half_n - 1;
 					const int y_displaced = j - half_n - 1;
-					int rad_coord = static_cast<int>(sqrt(x_displaced * x_displaced + y_displaced * y_displaced)) - 1;
+					unsigned long int rad_coord = static_cast<int>(sqrt(x_displaced * x_displaced + y_displaced * y_displaced)) - 1;
 					if (rad_coord >= half_n)
 					{
 						density_[IDX(i, j, k, n)] = 0;
@@ -135,6 +135,28 @@ void VolumeInstance::fill_with_zeros(unsigned long int n)
 				velocity_x_[IDX(i, j, k, n)] = 0;
 				velocity_y_[IDX(i, j, k, n)] = 0;
 				velocity_z_[IDX(i, j, k, n)] = 0;
+			}
+		}
+	}
+}
+
+void VolumeInstance::copy(unsigned long int n, VolumeInstance* from_volume)
+{
+	
+	unsigned long int i, j, k;
+	max_ = from_volume->max_; min_ = from_volume->min_;
+	visc_ = from_volume->visc_; diff_ = from_volume->diff_; dt_ = from_volume->dt_;
+
+	for (i = 0; i <= n + 1; i++)
+	{
+		for (j = 0; j <= n + 1; j++)
+		{
+			for (k = 0; k <= n + 1; k++)
+			{
+				density_[IDX(i, j, k, n)] = from_volume->density_[IDX(i, j, k, n)];
+				velocity_x_[IDX(i, j, k, n)] = from_volume->velocity_x_[IDX(i, j, k, n)];
+				velocity_y_[IDX(i, j, k, n)] = from_volume->velocity_y_[IDX(i, j, k, n)];
+				velocity_z_[IDX(i, j, k, n)] = from_volume->velocity_z_[IDX(i, j, k, n)];
 			}
 		}
 	}

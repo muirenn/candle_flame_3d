@@ -51,6 +51,7 @@ void FullAnimation::init()
 	}
 	
 	frame->draw_sphere(n_);
+	//frame->draw_candle_v1(n_);
 	frame_prev->fill_with_zeros(n_);
 
 	minTotal_ = frame->get_min();
@@ -59,7 +60,10 @@ void FullAnimation::init()
 
 void FullAnimation::run()
 {
-	for (unsigned int i = 0; i < time_; i++)
+	long int i, j, k;
+	unsigned int t;
+
+	for (t = 0; t < time_; t++)
 	{
 		// velocity step
 		diffuse(frame->dt_, frame->diff_, velocity_x, frame_prev->velocity_x_, frame->velocity_x_);
@@ -82,8 +86,34 @@ void FullAnimation::run()
 
 		iter++;
 
-		frame_prev->copy(n_, frame);
+		//frame_prev->copy(n_, frame);
+		
 		//frame -> add dye/velocities
+
+		long int half_n = static_cast<long int>(n_ / 2);
+
+		for (i = -2; i <= 2; i++)
+		{
+			for (j = -2; j <= 2; j++)
+			{
+				for (k = -2; k <= 2; k++)
+				{
+					int ad = 9 - abs(i*j*k);
+					//cout << ad << endl;
+					frame->density_[IDX(half_n + i, half_n + j, half_n + k, n_)] += ad*100.0;
+				}
+			}
+		}
+		double vx = static_cast <double> (rand()) / static_cast <double> (RAND_MAX) - 0.5;
+		double vy = static_cast <double> (rand()) / static_cast <double> (RAND_MAX) - 0.5;
+		double vz = static_cast <double> (rand()) / static_cast <double> (RAND_MAX) - 0.5;
+		//cout << vx << " " << vy << " " << vz << endl;
+		frame->velocity_x_[IDX(half_n, half_n, half_n, n_)] += vx*10;
+		frame->velocity_y_[IDX(half_n, half_n, half_n, n_)] += vy*10;
+
+		frame->velocity_z_[IDX(half_n, half_n, half_n, n_)] += vz*10;
+
+
 	}
 }
 

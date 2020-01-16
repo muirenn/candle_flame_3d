@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VolumeInstance.h"
+#include <cmath>
 
 #define DEFAULT_time 30
 

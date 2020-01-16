@@ -50,7 +50,7 @@ void VolumeInstance::draw_sphere(unsigned long int n)
 					(k <= half_n) ? k : (n + 2 - k)); 
 				density_[IDX(i, j, k, n)] = density_value;
 				velocity_x_[IDX(i, j, k, n)] = 0;
-				velocity_y_[IDX(i, j, k, n)] = 0;
+				velocity_y_[IDX(i, j, k, n)] = DEFAULT_avg_velocity;
 				velocity_z_[IDX(i, j, k, n)] = DEFAULT_high_velocity;
 
 				if(density_value > max_)
@@ -67,6 +67,8 @@ void VolumeInstance::draw_sphere(unsigned long int n)
 	}
 }
 
+
+
 void VolumeInstance::draw_candle_v1(unsigned long int n) const
 {
 	unsigned long int i, j, k;
@@ -81,8 +83,8 @@ void VolumeInstance::draw_candle_v1(unsigned long int n) const
 			//	density_[IDX(i, j, k, n_)] = 0;
 				// density_prev_[IDX(i, j, k, n_)] = 0;
 				velocity_x_[IDX(i, j, k, n)] = 0;
-				velocity_y_[IDX(i, j, k, n)] = DEFAULT_avg_velocity;
-				velocity_z_[IDX(i, j, k, n)] = 0;
+				velocity_y_[IDX(i, j, k, n)] = 0;
+				velocity_z_[IDX(i, j, k, n)] = DEFAULT_avg_velocity;
 
 
 

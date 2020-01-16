@@ -13,9 +13,9 @@ using namespace std;
 
 
 #define DEFAULT_cube_side_size 50
-#define DEFAULT_viscosity 0.0000001
-#define DEFAULT_diffusivity 0.000001 // L^2*T^(-1); L = initial size of gas blob or field
-#define DEFAULT_time_step 0.05 // T
+#define DEFAULT_viscosity 0.001
+#define DEFAULT_diffusivity 0 // L^2*T^(-1); L = initial size of gas blob or field
+#define DEFAULT_time_step 0.2 // T
 #define DEFAULT_iter 20
 
 #define DEFAULT_avg_density 5
@@ -26,7 +26,6 @@ using namespace std;
 constexpr const char* bvox_filename_DEFAULT = "holyshit.bvox";
 
 #define IDX(i,j,k,N) ((k)+(j)*((N)+2)+(i)*((N)+2)*((N)+2))
-#define SWAP(x0, x) {double *tmp=x0;x0=x;x=tmp;}
 
 enum property { density = 0, velocity_x = 1, velocity_y = 2, velocity_z = 3 };
 

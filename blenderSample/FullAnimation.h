@@ -31,9 +31,7 @@ private:
 		Vf_,
 		Vh_, // normal velocity of fuel and hot gaseous products
 		minTotal_,
-		maxTotal_,
-		S = 0.161, // reaction speed, g/min; in source - 0.5 m/s; maybe 27.5mm/30min
-		ignition_temp_K_ = 472; // or 643?
+		maxTotal_;
 
 	string filename_;
 	
@@ -45,7 +43,7 @@ public:
 	void find_new_velocity_field(); 
 	void write_animation_to_file() const;
 	void add_dens_to_center();
-	void apply_gravity();
+	void apply_buoyancy_forces();
 	void resolve_temperature();
 	void write_results();
 	FullAnimation();

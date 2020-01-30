@@ -23,7 +23,7 @@ void FullAnimation::init()
 	frame_prev.fill_with_zeros(n_);
 
 	minTotal_ = T_MAX;
-	maxTotal_ = -1;
+	maxTotal_ = -20;
 }
 
 void FullAnimation::run()
@@ -36,7 +36,7 @@ void FullAnimation::run()
 	for (t = 0; t < time_; t++)
 	{
 		/* Velocity step: ∂u/∂t=-(u∙∇)u+ν∇^2 u+f */
-		//apply_gravity();
+		//apply_buoyancy_forces();
 
 		diffuse(frame.dt_, frame.diff_, velocity_x, frame_prev.vX_, frame.vX_, lin_itr_, n_);
 		diffuse(frame.dt_, frame.diff_, velocity_y, frame_prev.vY_, frame.vY_, lin_itr_, n_);
@@ -65,7 +65,9 @@ void FullAnimation::run()
 
 		advect(frame.dt_, density, frame.Y_elaps, frame_prev.Y_elaps, frame.vX_, frame.vY_, frame.vZ_, n_);
 		frame.add_constant(frame.Y_elaps, -CONST_K, n_);
+		//frame.add_constant(frame.vY_, DEFAULT_avg_velocity, n_);
 
+		frame_prev.copy(n_, &frame);
 
 		/* Temperature step */
 		//resolve_temperature();
@@ -77,9 +79,9 @@ void FullAnimation::run()
 
 		iter++;
 
-		frame_prev.copy(n_, &frame);
+		//frame_prev.copy(n_, &frame);
 		//add_dens_to_center();
-		frame.add_fuel(n_);
+		//frame.add_fuel(n_);
 	}
 }
 
@@ -163,7 +165,7 @@ void FullAnimation::add_dens_to_center()
 	
 }
 
-void FullAnimation::apply_gravity()
+void FullAnimation::apply_buoyancy_forces()
 {
 		unsigned long int i, j, k;
 
@@ -197,6 +199,7 @@ void FullAnimation::resolve_temperature()
 				else {
 					if (y > 1) {
 						frame.tempK_[IDX(i, j, k, n_)] = KELVINIZE(-y * 10 * (T_IGN - T_MAX) - 10 * T_MAX + 9 * T_IGN);
+					//	frame.Y_elaps[IDX(i, j, k, n_)] = 0;
 					}
 
 				}
@@ -236,7 +239,7 @@ void FullAnimation::write_results()
 
 FullAnimation::FullAnimation(): qty_to_display(nullptr), time_(DEFAULT_time),
                                 n_(DEFAULT_cube_side_size),
-								lin_itr_(DEFAULT_iter),
+								lin_itr_(LIN_ITERS),
                                 frame_size_(0), iter(0),
                                 minTotal_(0),
                                 maxTotal_(0)

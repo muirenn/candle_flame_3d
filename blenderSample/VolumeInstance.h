@@ -12,23 +12,6 @@ using namespace std;
 // grid spacing too small. The problem is that this method breaks
 // down when the density propagates further than just between neighbors.
 
-
-#define DEFAULT_cube_side_size 50
-#define DEFAULT_viscosity 0.001
-#define DEFAULT_diffusivity 0 // L^2*T^(-1); L = initial size of gas blob or field
-#define DEFAULT_time_step 0.2 // T
-#define DEFAULT_iter 20
-
-#define DEFAULT_avg_density 5
-#define DEFAULT_high_density 20
-#define DEFAULT_avg_velocity 0.2
-#define DEFAULT_high_velocity 0
-
-constexpr const char* bvox_filename_DEFAULT = "holyshit.bvox";
-
-#define IDX(i,j,k,N) ((k)+(j)*((N)+2)+(i)*((N)+2)*((N)+2)) // i === z
-
-
 class VolumeInstance
 {
 private:
@@ -45,6 +28,10 @@ public:
 		*tempK_,
 		*press_, // p
 		*f_conf,
+		*imp_surf_vX,
+		*imp_surf_vY,
+		*imp_surf_vZ,
+		*unit_norm, //local unit normal
 		*Y_elaps; //1-Y = time elapsed since a fluid element crossed over the blue reaction core; Y(0)=1 in the region occupied by gaseous fuel
 
 	double *f_buoy; // 1D array - Z axis only
@@ -69,11 +56,9 @@ public:
 	void add_source(double* x, double* a, unsigned long int n);
 	void add_constant(double* x, double a, unsigned long int n);
 	void draw_sphere(unsigned long int n);
-	void draw_candle_v1(unsigned long int n) const;
 	double get_min() const;
 	double get_max() const;
 	void fill_with_zeros(unsigned long int n);
 	void copy(unsigned long int n, VolumeInstance* from_volume);
-	void find_f_buoy(unsigned long int n);
 	void add_fuel(unsigned long int n);
 };

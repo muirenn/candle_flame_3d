@@ -1,11 +1,9 @@
-﻿#include "stdafx.h"
-#include "Math_Solver.h"
+﻿#include "Math_Solver.h"
 
 /*
 Velocity equation: 
 ∂u/∂t=-(u∙∇)u-1/ρ ∇p+ν∇^2 u+f
 */
-
 
 
 void lin_solve(property prop, double* x, double* x0, double a, double c, int lin_itr, unsigned long int n) {
@@ -18,16 +16,32 @@ void lin_solve(property prop, double* x, double* x0, double a, double c, int lin
 			{
 				for (k = 1; k <= n; k++)
 				{
-					x[IDX(i, j, k, n)] = (x0[IDX(i, j, k, n)] +
-						a * (
-							x[IDX(i - 1, j, k, n)] +
-							x[IDX(i + 1, j, k, n)] +
-							x[IDX(i, j - 1, k, n)] +
-							x[IDX(i, j + 1, k, n)] +
-							x[IDX(i, j, k - 1, n)] +
-							x[IDX(i, j, k + 1, n)]
-							)
-						) / c;
+                    double aa, bb, cc;
+                    if(prop == property::density){
+                        // use diffusivity
+                        if(x0[IDX(i, j, k, n)] > 0/* && x0[IDX(i, j, k, n)] < maxTotal_/2*/)
+                            bb = M2perS_TO_VXL2perFRAME(CO2_DIFF_T_IGN);
+                        else
+                            bb = M2perS_TO_VXL2perFRAME(AIR_DIFF_T_ROOM);
+                        aa = a*bb;
+                        cc = 1+6*aa;
+                    } else {
+                        // use viscosity
+                        aa = a;
+                        bb = M2perS_TO_VXL2perFRAME(AIR_VISC_T_ROOM);
+                        cc = c;
+                    }
+
+                    x[IDX(i, j, k, n)] = (x0[IDX(i, j, k, n)] +
+                                          aa * (
+                                                  x[IDX(i - 1, j, k, n)] +
+                                                  x[IDX(i + 1, j, k, n)] +
+                                                  x[IDX(i, j - 1, k, n)] +
+                                                  x[IDX(i, j + 1, k, n)] +
+                                                  x[IDX(i, j, k - 1, n)] +
+                                                  x[IDX(i, j, k + 1, n)]
+                                          )
+                                         ) / cc;
 				}
 			}
 		}
@@ -37,72 +51,70 @@ void lin_solve(property prop, double* x, double* x0, double a, double c, int lin
 
 void set_bnd(property prop, double* x, unsigned long int n)
 {
-	unsigned long int i, j, k;
-	for (i = 1; i <= n; i++)
-	{
-		for (j = 1; j <= n; j++)
-		{
-			x[IDX(i, j, 0, n)] = (prop == 3 ? -x[IDX(i, j, 1, n)] : x[IDX(i, j, 1, n)]);
-			x[IDX(i, j, n + 1, n)] = (prop == 3 ? -x[IDX(i, j, n, n)] : x[IDX(i, j, n, n)]);
-		}
-	}
-	for (i = 1; i <= n; i++)
-	{
-		for (k = 1; k <= n; k++)
-		{
-			x[IDX(i, 0, k, n)] = (prop == 2 ? -x[IDX(i, 1, k, n)] : x[IDX(i, 1, k, n)]);
-			x[IDX(i, n + 1, k, n)] = (prop == 2 ? -x[IDX(i, n, k, n)] : x[IDX(i, n, k, n)]);
-		}
-	}
-	for (j = 1; j <= n; j++)
-	{
-		for (k = 1; k <= n; k++)
-		{
-			x[IDX(0, j, k, n)] = (prop == 1 ? -x[IDX(1, j, k, n)] : x[IDX(1, j, k, n)]);
-			x[IDX(n + 1, j, k, n)] = (prop == 1 ? -x[IDX(n, j, k, n)] : x[IDX(n, j, k, n)]);
-		}
-	}
-
-	x[IDX(0, 0, 0, n)] = 0.33 * (
-		x[IDX(1, 0, 0, n)] +
-		x[IDX(0, 1, 0, n)] +
-		x[IDX(0, 0, 1, n)]);
-	x[IDX(0, n + 1, 0, n)] = 0.33 * (
-		x[IDX(1, n + 1, 0, n)] +
-		x[IDX(0, n, 0, n)] +
-		x[IDX(0, n + 1, 1, n)]);
-	x[IDX(0, 0, n + 1, n)] = 0.33 * (
-		x[IDX(1, 0, n + 1, n)] +
-		x[IDX(0, 1, n + 1, n)] +
-		x[IDX(0, 0, n, n)]);
-	x[IDX(0, n + 1, n + 1, n)] = 0.33 * (
-		x[IDX(1, n + 1, n + 1, n)] +
-		x[IDX(0, n, n + 1, n)] +
-		x[IDX(0, n + 1, n, n)]);
-	x[IDX(n + 1, 0, 0, n)] = 0.33 * (
-		x[IDX(n, 0, 0, n)] +
-		x[IDX(n + 1, 1, 0, n)] +
-		x[IDX(n + 1, 0, 1, n)]);
-	x[IDX(n + 1, n + 1, 0, n)] = 0.33 * (
-		x[IDX(n, n + 1, 0, n)] +
-		x[IDX(n + 1, n, 0, n)] +
-		x[IDX(n + 1, n + 1, 1, n)]);
-	x[IDX(n + 1, 0, n + 1, n)] = 0.33 * (
-		x[IDX(n, 0, n + 1, n)] +
-		x[IDX(n + 1, 1, n + 1, n)] +
-		x[IDX(n + 1, 0, n, n)]);
-	x[IDX(n + 1, n + 1, n + 1, n)] = 0.33 * (
-		x[IDX(n, n + 1, n + 1, n)] +
-		x[IDX(n + 1, n, n + 1, n)] +
-		x[IDX(n + 1, n + 1, n, n)]);
+//	unsigned long int i, j, k;
+//	for (i = 1; i <= n; i++)
+//	{
+//		for (j = 1; j <= n; j++)
+//		{
+//			x[IDX(i, j, 0, n)] = (prop == 3 ? -x[IDX(i, j, 1, n)] : x[IDX(i, j, 1, n)]);
+//			x[IDX(i, j, n + 1, n)] = (prop == 3 ? -x[IDX(i, j, n, n)] : x[IDX(i, j, n, n)]);
+//		}
+//	}
+//	for (i = 1; i <= n; i++)
+//	{
+//		for (k = 1; k <= n; k++)
+//		{
+//			x[IDX(i, 0, k, n)] = (prop == 2 ? -x[IDX(i, 1, k, n)] : x[IDX(i, 1, k, n)]);
+//			x[IDX(i, n + 1, k, n)] = (prop == 2 ? -x[IDX(i, n, k, n)] : x[IDX(i, n, k, n)]);
+//		}
+//	}
+//	for (j = 1; j <= n; j++)
+//	{
+//		for (k = 1; k <= n; k++)
+//		{
+//			x[IDX(0, j, k, n)] = (prop == 1 ? -x[IDX(1, j, k, n)] : x[IDX(1, j, k, n)]);
+//			x[IDX(n + 1, j, k, n)] = (prop == 1 ? -x[IDX(n, j, k, n)] : x[IDX(n, j, k, n)]);
+//		}
+//	}
+//
+//	x[IDX(0, 0, 0, n)] = 0.33 * (
+//		x[IDX(1, 0, 0, n)] +
+//		x[IDX(0, 1, 0, n)] +
+//		x[IDX(0, 0, 1, n)]);
+//	x[IDX(0, n + 1, 0, n)] = 0.33 * (
+//		x[IDX(1, n + 1, 0, n)] +
+//		x[IDX(0, n, 0, n)] +
+//		x[IDX(0, n + 1, 1, n)]);
+//	x[IDX(0, 0, n + 1, n)] = 0.33 * (
+//		x[IDX(1, 0, n + 1, n)] +
+//		x[IDX(0, 1, n + 1, n)] +
+//		x[IDX(0, 0, n, n)]);
+//	x[IDX(0, n + 1, n + 1, n)] = 0.33 * (
+//		x[IDX(1, n + 1, n + 1, n)] +
+//		x[IDX(0, n, n + 1, n)] +
+//		x[IDX(0, n + 1, n, n)]);
+//	x[IDX(n + 1, 0, 0, n)] = 0.33 * (
+//		x[IDX(n, 0, 0, n)] +
+//		x[IDX(n + 1, 1, 0, n)] +
+//		x[IDX(n + 1, 0, 1, n)]);
+//	x[IDX(n + 1, n + 1, 0, n)] = 0.33 * (
+//		x[IDX(n, n + 1, 0, n)] +
+//		x[IDX(n + 1, n, 0, n)] +
+//		x[IDX(n + 1, n + 1, 1, n)]);
+//	x[IDX(n + 1, 0, n + 1, n)] = 0.33 * (
+//		x[IDX(n, 0, n + 1, n)] +
+//		x[IDX(n + 1, 1, n + 1, n)] +
+//		x[IDX(n + 1, 0, n, n)]);
+//	x[IDX(n + 1, n + 1, n + 1, n)] = 0.33 * (
+//		x[IDX(n, n + 1, n + 1, n)] +
+//		x[IDX(n + 1, n, n + 1, n)] +
+//		x[IDX(n + 1, n + 1, n, n)]);
 }
 
 // For mass-concerving property of velocity; Poisson equation solver
 void project(double* u, double* v, double* w, double* p, double* div, int lin_itr, unsigned long int n)
 {
 	unsigned long int i, j, k;
-	//double* p = new double[52*52*52];
-	//double* div = new double[52 * 52 * 52];
 	double h = 1.0 / n;
 
 	for (i = 1; i <= n; i++)
@@ -126,7 +138,7 @@ void project(double* u, double* v, double* w, double* p, double* div, int lin_it
 	// p - gradient field?
 	set_bnd(density, div, n);
 	set_bnd(density, p, n);
-	lin_solve(density, p, div, 1, 6, lin_itr, n);
+	lin_solve(dens2, p, div, 1, 6, lin_itr, n); // TODO sth with the dens2
 
 	for (i = 1; i <= n; i++)
 	{
@@ -152,17 +164,31 @@ void project(double* u, double* v, double* w, double* p, double* div, int lin_it
 	set_bnd(velocity_x, u, n);
 	set_bnd(velocity_y, v, n);
 	set_bnd(velocity_z, w, n);
-
-	//delete[] div;
-	//delete[] p;
 }
 
 
 // + ν∇^2 x
-void diffuse(double dt, double diff, property prop, double* x, double* x0, int linitr, unsigned long int n)
+void diffuse(double dt, double b, property prop, double* x, double* x0, int linitr, unsigned long int n)
 {
-	double a = dt * diff * n * n * n;
+	double a = dt * n * n * n;
 	lin_solve(prop, x, x0, a, 1 + 6 * a, linitr, n);
+}
+
+void stabilize(double* x, double coef_k, double dt, unsigned long int n)
+{
+	unsigned long int i, j, k;
+
+	for (i = 1; i <= n; i++)
+	{
+		for (j = 1; j <= n; j++)
+		{
+			for (k = 1; k <= n; k++)
+			{
+				x[IDX(i, j, k, n)] += -coef_k * dt;
+			}
+		}
+	}
+
 }
 
 
@@ -225,5 +251,11 @@ void advect(double dt, property prop, double* d, double* d0, double* u, double* 
 		}
 	}
 
-	set_bnd(prop, d, n);
+	set_bnd(prop, d, static_cast<unsigned long int>(n));
+}
+
+double curl(double* u, double* v, double* w, unsigned long int i, unsigned long int j, unsigned long int k, unsigned long int n){
+    return u[IDX(i, j+1, k, n)] - u[IDX(i, j-1, k, n)] +
+           v[IDX(i-1, j, k, n)] - v[IDX(i+1, j, k, n)] +
+           w[IDX(i, j, k+1, n)] - w[IDX(i, j, k-1, n)];
 }

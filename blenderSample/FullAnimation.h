@@ -3,7 +3,6 @@
 #include "VolumeInstance.h"
 #include "Math_Solver.h"
 
-#define DEFAULT_time 30
 
 class FullAnimation
 {
@@ -12,7 +11,7 @@ private:
 	VolumeInstance frame_prev;
 	
 	double* 
-		qty_to_display; // temperature?
+		qty_to_display;
 	
 	unsigned int 
 		time_, 
@@ -26,27 +25,22 @@ private:
 		iter; //max: ; cubic root [n_] = 2 642 246
 	
 	double
-		dens_f_,
-		dens_h_, // density of fuel and hot gaseous products
-		Vf_,
-		Vh_, // normal velocity of fuel and hot gaseous products
 		minTotal_,
 		maxTotal_;
 
 	string filename_;
-	
-	void write_init_to_file() const;
+    string log_filename_;
+
+    void write_init_data_to_file() const;
 
 public:
 	void init();
 	void run();
-	void find_new_velocity_field(); 
-	void write_animation_to_file() const;
-	void add_dens_to_center();
+	void write_animation_to_file() ;
 	void apply_buoyancy_forces();
-	void resolve_temperature();
+	void apply_confinement_forces();
 	void write_results();
 	FullAnimation();
-	FullAnimation(int time, int n, string filename);
+	FullAnimation(unsigned int time, unsigned int n, string filename, string log_filename);
 	~FullAnimation();
 };

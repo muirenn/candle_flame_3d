@@ -17,7 +17,7 @@ private:
 		time_, 
 		lin_itr_;
 	
-	unsigned long int 
+	unsigned long int
 		n_;
 	
 	unsigned long long int 

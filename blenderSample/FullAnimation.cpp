@@ -32,31 +32,33 @@ void FullAnimation::run() {
     for (t = 0; t < time_; t++) {
         // fbuoy = a (T −Tair)(0,0,1)
         apply_buoyancy_forces();
-        // apply_confinement_forces();
+        apply_confinement_forces();
 
-        /* Velocity step: ∂u/∂t=-(u∙∇)u+ν∇^2 u+f */
+        /* ----- Velocity step: ∂u/∂t=-(u∙∇)u+ν∇^2 u+f ----- */
 
-        // ν∇^2 u
-        diffuse(frame.dt_, frame.visc_, velocity_x, frame_prev.vX_, frame.vX_, lin_itr_, n_);
-        diffuse(frame.dt_, frame.visc_, velocity_y, frame_prev.vY_, frame.vY_, lin_itr_, n_);
-        diffuse(frame.dt_, frame.visc_, velocity_z, frame_prev.vZ_, frame.vZ_, lin_itr_, n_);
+        // --- ν∇^2 u
+        diffuse(frame.dt_, frame.visc_, velocity_x, frame_prev.vX, frame.vX, lin_itr_, n_);
+        diffuse(frame.dt_, frame.visc_, velocity_y, frame_prev.vY, frame.vY, lin_itr_, n_);
+        diffuse(frame.dt_, frame.visc_, velocity_z, frame_prev.vZ, frame.vZ, lin_itr_, n_);
 
-        project(frame_prev.vX_, frame_prev.vY_, frame_prev.vZ_, frame.vX_, frame.vY_, lin_itr_, n_);
+        project(frame_prev.vX, frame_prev.vY, frame_prev.vZ, frame.vX, frame.vY, lin_itr_, n_);
 
-        // -(u∙∇)u for each part of u
-        advect(frame.dt_, velocity_x, frame.vX_, frame_prev.vX_, frame_prev.vX_, frame_prev.vY_, frame_prev.vZ_, n_);
-        advect(frame.dt_, velocity_y, frame.vY_, frame_prev.vY_, frame_prev.vX_, frame_prev.vY_, frame_prev.vZ_, n_);
-        advect(frame.dt_, velocity_z, frame.vZ_, frame_prev.vZ_, frame_prev.vX_, frame_prev.vY_, frame_prev.vZ_, n_);
+        // --- -(u∙∇)u for each part of u
+        advect(frame.dt_, velocity_x, frame.vX, frame_prev.vX, frame_prev.vX, frame_prev.vY, frame_prev.vZ, n_);
+        advect(frame.dt_, velocity_y, frame.vY, frame_prev.vY, frame_prev.vX, frame_prev.vY, frame_prev.vZ, n_);
+        advect(frame.dt_, velocity_z, frame.vZ, frame_prev.vZ, frame_prev.vX, frame_prev.vY, frame_prev.vZ, n_);
 
-        project(frame.vX_, frame.vY_, frame.vZ_, frame_prev.vX_, frame_prev.vY_, lin_itr_, n_);
+        project(frame.vX, frame.vY, frame.vZ, frame_prev.vX, frame_prev.vY, lin_itr_, n_);
 
-        // TODO add pressure (correction) term:
+
+        /* --- Possible improvement: add pressure (correction) term: --- */
         // u = u*-∆t∇p/ρ
         // solve ∇∙(∇p/ρ)=∇∙u^*/∆t to find the pressure needed to update the above equation
 
-        /* Density step: ∂ρ/∂t=-(u∙∇)ρ+κ∇^2 ρ+S*/
-       diffuse(frame.dt_, frame.diff_, density, frame_prev.dens_, frame.dens_, lin_itr_, n_);
-       advect(frame.dt_, density, frame.dens_, frame_prev.dens_, frame.vX_, frame.vY_, frame.vZ_, n_);
+
+        /* ----- Density step: ∂ρ/∂t=-(u∙∇)ρ+κ∇^2 ρ+S ----- */
+       diffuse(frame.dt_, frame.diff_, density, frame_prev.dens, frame.dens, lin_itr_, n_);
+       advect(frame.dt_, density, frame.dens, frame_prev.dens, frame.vX, frame.vY, frame.vZ, n_);
 
         write_results();
 
@@ -113,7 +115,7 @@ void FullAnimation::apply_buoyancy_forces() {
     for (i = 0; i <= n_ + 1; i++) {
         for (j = 0; j <= n_ + 1; j++) {
             for (k = 0; k <= n_ + 1; k++) {
-                frame.vZ_[IDX(i, j, k, n_)] += ALPHA * frame.dens_[IDX(i, j, k, n_)];
+                frame.vZ[IDX(i, j, k, n_)] += ALPHA * frame.dens[IDX(i, j, k, n_)];
             }
         }
     }
@@ -122,14 +124,14 @@ void FullAnimation::apply_buoyancy_forces() {
 void FullAnimation::apply_confinement_forces() {
     unsigned long int i, j, k;
     double dx, dy, dz, len;
-    double vorticity = 10;
+    double vorticity = STD_VORTICITY;
 
     for (i = 2; i <= n_ - 2; i++) {
         for (j = 2; j <= n_ - 2; j++) {
             for (k = 2; k <= n_ - 2; k++) {
-                double absCurlX =  abs(curl(frame.vX_,frame.vY_,frame.vZ_,i - 1,j,k,n_)) - abs(curl(frame.vX_,frame.vY_,frame.vZ_,i + 1,j,k,n_));
-                double absCurlY =  abs(curl(frame.vX_,frame.vY_,frame.vZ_,i,j - 1,k,n_)) - abs(curl(frame.vX_,frame.vY_,frame.vZ_,i,j + 1,k,n_));
-                double absCurlZ = abs(curl(frame.vX_,frame.vY_,frame.vZ_,i,j,k - 1,n_)) - abs(curl(frame.vX_,frame.vY_,frame.vZ_,i,j,k + 1,n_));
+                double absCurlX = abs(curl(frame.vX, frame.vY, frame.vZ, i - 1, j, k, n_)) - abs(curl(frame.vX, frame.vY, frame.vZ, i + 1, j, k, n_));
+                double absCurlY = abs(curl(frame.vX, frame.vY, frame.vZ, i, j - 1, k, n_)) - abs(curl(frame.vX, frame.vY, frame.vZ, i, j + 1, k, n_));
+                double absCurlZ = abs(curl(frame.vX, frame.vY, frame.vZ, i, j, k - 1, n_)) - abs(curl(frame.vX, frame.vY, frame.vZ, i, j, k + 1, n_));
 
                 // directions to X, Y, Z
                 dx = absCurlY + absCurlZ;
@@ -141,11 +143,11 @@ void FullAnimation::apply_confinement_forces() {
                 dy = vorticity/len*dy;
                 dz = vorticity/len*dz;
 
-                double curlXYZ = curl(frame.vX_,frame.vY_,frame.vZ_,i,j,k,n_);
+                double curlXYZ = curl(frame.vX, frame.vY, frame.vZ, i, j, k, n_);
 
-                frame.vX_[IDX(i,j,k,n_)] = frame.vX_[IDX(i,j,k,n_)] + frame.dt_*curlXYZ*dx;
-                frame.vY_[IDX(i,j,k,n_)] = frame.vY_[IDX(i,j,k,n_)] + frame.dt_*curlXYZ*dy;
-                frame.vZ_[IDX(i,j,k,n_)] = frame.vZ_[IDX(i,j,k,n_)] + frame.dt_*curlXYZ*dz;
+                frame.vX[IDX(i, j, k, n_)] = frame.vX[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dx;
+                frame.vY[IDX(i, j, k, n_)] = frame.vY[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dy;
+                frame.vZ[IDX(i, j, k, n_)] = frame.vZ[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dz;
             }
         }
     }
@@ -160,7 +162,7 @@ void FullAnimation::write_results() {
     for (i = 1; i <= n_; i++) {
         for (j = 1; j <= n_; j++) {
             for (k = 1; k <= n_; k++) {
-                double res = frame.dens_[IDX(i, j, k, n_)];
+                double res = frame.dens[IDX(i, j, k, n_)];
                 qty_to_display[iter * frame_size_ + IDX(i, j, k, n_)] = res; // TODO check order
                 if (res < minTotal_) {
                     minTotal_ = res;

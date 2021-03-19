@@ -1,29 +1,30 @@
 #include "VolumeInstance.h"
+#include "Math_Solver.h"
 
 VolumeInstance::VolumeInstance() : visc_(AIR_VISC_T_ROOM),
                                    diff_(AIR_DIFF_T_ROOM), dt_(TIME_STEP), min_(0), max_(0),
-                                   dens_(nullptr),
-                                   vX_(nullptr),
-                                   vY_(nullptr),
-                                   vZ_(nullptr) {
+                                   dens(nullptr),
+                                   vX(nullptr),
+                                   vY(nullptr),
+                                   vZ(nullptr) {
 }
 
 VolumeInstance::~VolumeInstance() {
-    delete[] dens_;
-    dens_ = nullptr;
-    delete[] vX_;
-    vX_ = nullptr;
-    delete[] vY_;
-    vY_ = nullptr;
-    delete[] vZ_;
-    vZ_ = nullptr;
+    delete[] dens;
+    dens = nullptr;
+    delete[] vX;
+    vX = nullptr;
+    delete[] vY;
+    vY = nullptr;
+    delete[] vZ;
+    vZ = nullptr;
 }
 
 void VolumeInstance::allocate_memory(unsigned long long int size) {
-    dens_ = new double[size];
-    vX_ = new double[size * 2];
-    vY_ = new double[size * 2];
-    vZ_ = new double[size * 2];
+    dens = new double[size];
+    vX = new double[size * 2];
+    vY = new double[size * 2];
+    vZ = new double[size * 2];
 
     visc_ = CO2_VISC_T_IGN;
     diff_ = AIR_DIFF_T_ROOM;
@@ -62,10 +63,10 @@ void VolumeInstance::fill_with_zeros(unsigned long int n) {
     for (i = 0; i <= n + 1; i++) {
         for (j = 0; j <= n + 1; j++) {
             for (k = 0; k <= n + 1; k++) {
-                dens_[IDX(i, j, k, n)] = 0;
-                vX_[IDX(i, j, k, n)] = 0;
-                vY_[IDX(i, j, k, n)] = 0;
-                vZ_[IDX(i, j, k, n)] = 0;
+                dens[IDX(i, j, k, n)] = 0;
+                vX[IDX(i, j, k, n)] = 0;
+                vY[IDX(i, j, k, n)] = 0;
+                vZ[IDX(i, j, k, n)] = 0;
             }
         }
     }
@@ -80,20 +81,18 @@ void VolumeInstance::hardcode_init_values(unsigned long int n) {
     for (i = 0; i <= n + 1; i++) {
         for (j = 0; j <= n + 1; j++) {
             for (k = 0; k <= n + 1; k++) {
-                dens_[IDX(i, j, k, n)] = 0;
-                vX_[IDX(i, j, k, n)] = 0;
-                vY_[IDX(i, j, k, n)] = 0;
-                vZ_[IDX(i, j, k, n)] = 0;
+                dens[IDX(i, j, k, n)] = 0;
+                vX[IDX(i, j, k, n)] = 0;
+                vY[IDX(i, j, k, n)] = 0;
+                vZ[IDX(i, j, k, n)] = 0;
 
                 // If the current voxel is within the area of estimated "blue core", we assume it has the temperature of ignition.
                 // Otherwise, it has air temperature
-                // For simplification, STG_1g_BLUE_CORE is a sphere in the center of the scene
-                long i0 = labs(i - half_n), j0 = labs(j - half_n);
-                if ((STD_1g_BLUE_CORE(VXL_TO_M(i0), VXL_TO_M(j0), VXL_TO_M(k) - WICK_H * 2) <= 1.0) &&
-                    (STD_1g_DARK_ZONE(VXL_TO_M(i0), VXL_TO_M(j0), VXL_TO_M(k) - WICK_H * 2) > 1.0)) {
-                    dens_[IDX(i, j, k, n)] = DEFAULT_high_density;
+                long i0 = (i - half_n), j0 = (j - half_n);
+                if (fuel_zone(i0,j0,k)) {
+                    dens[IDX(i, k, j, n)] = DEFAULT_high_density;
                 } else {
-                    dens_[IDX(i, j, k, n)] = 0;
+                    dens[IDX(i, k, j, n)] = 0;
                 }
             }
         }
@@ -112,10 +111,10 @@ void VolumeInstance::copy(unsigned long int n, VolumeInstance *from_volume) {
     for (i = 0; i <= n + 1; i++) {
         for (j = 0; j <= n + 1; j++) {
             for (k = 0; k <= n + 1; k++) {
-                dens_[IDX(i, j, k, n)] = from_volume->dens_[IDX(i, j, k, n)];
-                vX_[IDX(i, j, k, n)] = from_volume->vX_[IDX(i, j, k, n)];
-                vY_[IDX(i, j, k, n)] = from_volume->vY_[IDX(i, j, k, n)];
-                vZ_[IDX(i, j, k, n)] = from_volume->vZ_[IDX(i, j, k, n)];
+                dens[IDX(i, j, k, n)] = from_volume->dens[IDX(i, j, k, n)];
+                vX[IDX(i, j, k, n)] = from_volume->vX[IDX(i, j, k, n)];
+                vY[IDX(i, j, k, n)] = from_volume->vY[IDX(i, j, k, n)];
+                vZ[IDX(i, j, k, n)] = from_volume->vZ[IDX(i, j, k, n)];
             }
         }
     }
@@ -128,11 +127,10 @@ void VolumeInstance::add_fuel(unsigned long int n) {
     for (i = 0; i <= n + 1; i++) {
         for (j = 0; j <= n + 1; j++) {
             for (k = 0; k <= n + 1; k++) {
-                long i0 = labs(i - half_n), j0 = labs(j - half_n);
-                if ((STD_1g_BLUE_CORE(VXL_TO_M(i0), VXL_TO_M(j0), VXL_TO_M(k) - WICK_H * 2) <= 1.0) &&
-                    (STD_1g_DARK_ZONE(VXL_TO_M(i0), VXL_TO_M(j0), VXL_TO_M(k) - WICK_H * 2) > 1.0)) {
+                long i0 = (i - half_n), j0 = (j - half_n);
+                if (fuel_zone(i0,j0,k)) {
 
-                    dens_[IDX(i, j, k, n)] += DEFAULT_high_density;
+                    dens[IDX(i, j, k, n)] += DEFAULT_high_density;
                 }
             }
         }

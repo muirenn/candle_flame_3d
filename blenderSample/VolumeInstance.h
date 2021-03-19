@@ -16,10 +16,10 @@ public:
 	VolumeInstance();
 	~VolumeInstance();
 	double // 3D arrays
-		*dens_, // ρ
-		*vX_,
-		*vY_,
-		*vZ_;
+		*dens, // ρ
+		*vX,
+		*vY,
+		*vZ;
 
 	double
 		visc_, // ν

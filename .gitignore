@@ -20,3 +20,10 @@
 /Report20191211-2121.diagsession
 /candle_flame.sln
 /candle_flame.sln.DotSettings.user
+/.vscode
+/blenderSample/results
+blenderSample/FullAnimation.o
+blenderSample/Math_Solver.o
+blenderSample/VolumeInstance.o
+blenderSample/blenderSample.o
+

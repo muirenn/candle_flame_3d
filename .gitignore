@@ -22,8 +22,8 @@
 /candle_flame.sln.DotSettings.user
 /.vscode
 /blenderSample/results
-blenderSample/FullAnimation.o
-blenderSample/Math_Solver.o
-blenderSample/VolumeInstance.o
-blenderSample/blenderSample.o
+/blenderSample/FullAnimation.o
+/blenderSample/Math_Solver.o
+/blenderSample/VolumeInstance.o
+/blenderSample/blenderSample.o
 

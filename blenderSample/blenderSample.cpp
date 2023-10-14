@@ -6,9 +6,6 @@ int main()
 	const int n = M_TO_VXL(N_SIDE);
 	cout << T << " frames;  " << n << " voxels per side" << endl;
 
-	// char log_filename[LOG_NAME_LENGTH];
-	// char bvox_filename[LOG_NAME_LENGTH];
-
 	FS::path *log_filename = new FS::path(), *bvox_filename = new FS::path();
 
 	get_filenames(log_filename, bvox_filename);
@@ -18,6 +15,7 @@ int main()
 	animation->init();
 	animation->run();
 	animation->write_animation_to_file();
+	// animation->write_fake_animation_to_file();
 
 	delete animation;
 	return 0;

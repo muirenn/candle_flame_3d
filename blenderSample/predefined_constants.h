@@ -1,7 +1,7 @@
 #pragma once
 
 /* User-defined & user-adjustable constants */
-#define TIME 20       // [s]		real physical time of the animation
+#define TIME 10       // [s]		real physical time of the animation
 #define N_SIDE 0.04   // [m]		real physical cube side size
 #define SPACING 0.001 // [m/vxl]  uniform spacing
 #define TIME_STEP 0.1 // [s/frame]

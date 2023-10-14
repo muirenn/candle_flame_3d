@@ -4,6 +4,7 @@ void FullAnimation::init()
 {
     iter = 0;
     write_init_data_to_file();
+    // write_fake_init_data_to_file();
 
     frame_size_ = (n_ + 2) * (n_ + 2) * (n_ + 2); // +2 goes for borders at each side
 
@@ -85,6 +86,22 @@ void FullAnimation::write_init_data_to_file() const
     log_file.close();
 }
 
+void FullAnimation::write_fake_init_data_to_file() const
+{
+    ofstream blender_file, log_file;
+    blender_file.open(filename_, ios::out | ios::binary | ios::trunc);
+    log_file.open(log_filename_, ios::out | ios::trunc);
+    int fake_n = 5, fake_time = 1;
+    blender_file.write(reinterpret_cast<const char *>(&fake_n), sizeof(fake_n));
+    blender_file.write(reinterpret_cast<const char *>(&fake_n), sizeof(fake_n));
+    blender_file.write(reinterpret_cast<const char *>(&fake_n), sizeof(fake_n));
+    blender_file.write(reinterpret_cast<const char *>(&fake_time), sizeof(fake_time));
+    log_file << "Sides: " << fake_n << " units;" << endl
+             << "Time: " << fake_time << " steps." << endl;
+    blender_file.close();
+    log_file.close();
+}
+
 void FullAnimation::write_animation_to_file()
 {
     ofstream blender_file, log_file;
@@ -107,6 +124,44 @@ void FullAnimation::write_animation_to_file()
                     float qty_normal = static_cast<float>((qty_unnormalized - minTotal_) / (maxTotal_ - minTotal_));
                     blender_file.write(reinterpret_cast<const char *>(&qty_normal), sizeof(qty_normal));
                     log_file << std::setw(10) << qty_normal << " ";
+                }
+                log_file << endl;
+            }
+            log_file << "-----------------------------------------" << endl;
+        }
+    }
+
+    blender_file.close();
+    log_file.close();
+}
+
+void FullAnimation::write_fake_animation_to_file()
+{
+    int fake_n = 5, fake_time = 1;
+
+    ofstream blender_file, log_file;
+    blender_file.open(filename_, ios::out | ios::binary | ios::app);
+    log_file.open(log_filename_, ios::out | ios::app);
+
+    unsigned long int i, j, k, l;
+
+    for (l = 0; l < fake_time; l++)
+    {
+        log_file << endl
+                 << "===== TIMESTAMP " << l << " =====" << endl;
+        for (k = 1; k <= fake_n; k++)
+        {
+            for (j = 1; j <= fake_n; j++)
+            {
+                for (i = 1; i <= fake_n; i++)
+                {
+                    unsigned long int max = fake_n * fake_n * fake_n, min = 1;
+                    float ii = k * j * i;
+                    cout << ii << " = ";
+                    float ii_normal = static_cast<float>((ii - min) / (max - min));
+                    cout << ii_normal << endl;
+                    blender_file.write(reinterpret_cast<const char *>(&ii_normal), sizeof(ii_normal));
+                    log_file << std::setw(10) << ii_normal << " ";
                 }
                 log_file << endl;
             }

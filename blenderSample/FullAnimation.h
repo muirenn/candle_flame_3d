@@ -16,9 +16,7 @@ private:
 
 	unsigned int
 		time_,
-		lin_itr_;
-
-	unsigned long int
+		lin_itr_,
 		n_;
 
 	unsigned long long int
@@ -33,11 +31,13 @@ private:
 	FS::path log_filename_;
 
 	void write_init_data_to_file() const;
+	void write_fake_init_data_to_file() const;
 
 public:
 	void init();
 	void run();
 	void write_animation_to_file();
+	void write_fake_animation_to_file();
 	void apply_buoyancy_forces();
 	void apply_confinement_forces();
 	void write_results();

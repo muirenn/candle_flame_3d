@@ -35,6 +35,8 @@ void FullAnimation::run()
 
     for (t = 0; t < time_; t++)
     {
+        // add_wind();
+
         // fbuoy = a (T −Tair)(0,0,1)
         apply_buoyancy_forces();
         apply_confinement_forces();
@@ -220,6 +222,22 @@ void FullAnimation::apply_confinement_forces()
                 frame.vX[IDX(i, j, k, n_)] = frame.vX[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dx;
                 frame.vY[IDX(i, j, k, n_)] = frame.vY[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dy;
                 frame.vZ[IDX(i, j, k, n_)] = frame.vZ[IDX(i, j, k, n_)] + frame.dt_ * curlXYZ * dz;
+            }
+        }
+    }
+}
+
+void FullAnimation::add_wind()
+{
+    unsigned long int i, j, k;
+    for (i = 0; i <= n_ + 1; i++)
+    {
+        for (j = 0; j <= n_ + 1; j++)
+        {
+            for (k = 0; k <= n_ + 1; k++)
+            {
+                frame.vX[IDX(i, j, k, n_)] += 0.0005;
+                frame.vY[IDX(i, j, k, n_)] += 0.001;
             }
         }
     }

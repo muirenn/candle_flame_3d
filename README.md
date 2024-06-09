@@ -112,3 +112,7 @@ The fluid simulation is visualized using a volumetric ray tracer in Blender. The
 ### Dependencies
 - C++ compiler
 - Blender for visualization
+
+### Result
+
+![](https://github.com/muirenn/candle_flame_3d/blob/master/animation_static_short.gif)

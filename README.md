@@ -107,7 +107,7 @@ void project(int N, double *u, double *v, double *p, double *div) {
 ```
 
 ### Visualization
-The fluid simulation is visualized using a volumetric ray tracer in Blender. The solver outputs density and velocity fields, which are then rendered to produce realistic visualizations of fluid dynamics.
+The fluid simulation is visualized using a volumetric ray tracer in Blender. The solver outputs density field, which is then assigned colours and rendered to produce realistic visualizations of fluid dynamics.
 
 ### Dependencies
 - C++ compiler

@@ -3,11 +3,11 @@
 #include <cmath>
 #include <string>
 #include <bits/stdc++.h>
+#include <filesystem>
 #include "predefined_constants.h"
 using namespace std;
 
-namespace FS = std::filesystem;
-// #define IDX(i, j, k, N) ((k) + (j) * ((N) + 2) + (i) * ((N) + 2) * ((N) + 2))
+namespace FS = filesystem;
 
 enum property
 {

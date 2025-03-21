@@ -1,7 +1,7 @@
 #pragma once
 
 /* User-defined & user-adjustable constants */
-#define TIME 20       // [s]		real physical time of the animation
+#define TIME 10       // [s]		real physical time of the animation
 #define N_SIDE 0.04   // [m]		real physical cube side size
 #define SPACING 0.001 // [m/vxl]  uniform spacing
 #define TIME_STEP 0.1 // [s/frame]
@@ -48,7 +48,7 @@
 #define MW_CO 28.01      // carbon monoxide
 #define MW_C 12.01       // carbon
 
-/* Parameters of the fuel region in the flames. In this case: 1g (normal gravity),easured & approximated in (SRC TODO) */
+/* Parameters of the fuel region in the flames. In this case: 1g (normal gravity), measured & approximated in (SRC TODO) */
 #define CORE_H_R_1g 0.003        // [m] flame core horizontal radius for a candle in normal gravity
 #define CORE_V_R_1g 0.005        // [m] flame core vertical radius for a candle in normal gravity
 #define DARK_REGION_H_R_1g 0.002 // [m] dark region (no-oxygen) horizontal radius in normal gravity
